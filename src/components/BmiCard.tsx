@@ -19,12 +19,34 @@ import { useToast } from "@/components/ui/use-toast";
 
 export function BmiCard() {
   const { toast } = useToast();
-  const [height, setHeight] = useState<number | "">("");
-  const [weight, setWeight] = useState<number | "">("");
+  const [heightFeet, setHeightFeet] = useState<number | "">("");
+  const [heightInches, setHeightInches] = useState<number | "">("");
+  const [heightCm, setHeightCm] = useState<number | "">("");
+  const [weightKg, setWeightKg] = useState<number | "">("");
+  const [weightLbs, setWeightLbs] = useState<number | "">("");
   const [bmi, setBmi] = useState(0);
+  const [system, setSystem] = useState<"metric" | "imperial">("metric");
 
   function handleClick(): void {
-    if (height === "" || weight === "" || height <= 0 || weight <= 0) {
+    let height: number;
+    if (system === "metric") {
+      height = heightCm as number;
+    } else {
+      if (heightFeet === "" || heightInches === "") {
+        toast({
+          title: "Invalid Input",
+          description: "Please enter valid values for height and weight.",
+          variant: "destructive",
+        });
+        setBmi(0);
+        return;
+      }
+      height = (heightFeet as number) * 12 + (heightInches as number);
+    }
+
+    const weight = system === "metric" ? weightKg : weightLbs;
+
+    if (height <= 0 || weight === "" || weight <= 0) {
       toast({
         title: "Invalid Input",
         description: "Please enter valid values for height and weight.",
@@ -34,9 +56,16 @@ export function BmiCard() {
       return;
     }
 
-    const calculatedBmi = Number(
-      ((weight / (height * height)) * 10_000).toFixed(1)
-    );
+    let calculatedBmi;
+    if (system === "metric") {
+      calculatedBmi = Number(
+        (((weight as number) / (height * height)) * 10_000).toFixed(1)
+      );
+    } else {
+      calculatedBmi = Number(
+        (((weight as number) / (height * height)) * 703).toFixed(1)
+      );
+    }
 
     if (isNaN(calculatedBmi)) {
       toast({
@@ -51,18 +80,24 @@ export function BmiCard() {
   }
 
   const kgDifference = (bmi: number, height: number): string => {
-    const currentWeight = (bmi * (height * height)) / 10_000;
+    const currentWeight =
+      system === "metric"
+        ? (bmi * (height * height)) / 10_000
+        : (bmi * (height * height)) / 703;
     let targetBmi;
 
     if (bmi < 18.5) {
-      targetBmi = 18.5; // Target the lower end of normal weight
+      targetBmi = 18.5;
     } else if (bmi > 24.9) {
-      targetBmi = 24.9; // Target the upper end of normal weight
+      targetBmi = 24.9;
     } else {
-      return ""; // Return empty string for normal weight
+      return "";
     }
 
-    const targetWeight = (targetBmi * (height * height)) / 10_000;
+    const targetWeight =
+      system === "metric"
+        ? (targetBmi * (height * height)) / 10_000
+        : (targetBmi * (height * height)) / 703;
     const difference = Math.abs(currentWeight - targetWeight);
     return difference.toFixed(1);
   };
@@ -101,6 +136,31 @@ export function BmiCard() {
 
   const classification = getBmiClassification(bmi);
 
+  const handleSystemChange = (newSystem: "metric" | "imperial") => {
+    if (newSystem === "metric" && system === "imperial") {
+      // Convert from imperial to metric
+      if (heightFeet !== "" || heightInches !== "") {
+        const totalInches =
+          (heightFeet as number) * 12 + (heightInches as number);
+        setHeightCm(Math.round(totalInches * 2.54));
+      }
+      if (weightLbs !== "") {
+        setWeightKg(Math.round((weightLbs as number) * 0.453592));
+      }
+    } else if (newSystem === "imperial" && system === "metric") {
+      // Convert from metric to imperial
+      if (heightCm !== "") {
+        const totalInches = Math.round((heightCm as number) / 2.54);
+        setHeightFeet(Math.floor(totalInches / 12));
+        setHeightInches(totalInches % 12);
+      }
+      if (weightKg !== "") {
+        setWeightLbs(Math.round((weightKg as number) / 0.453592));
+      }
+    }
+    setSystem(newSystem);
+  };
+
   return (
     <>
       <Card className="w-[350px] min-w-[350px] shadow-lg">
@@ -109,12 +169,14 @@ export function BmiCard() {
           <CardDescription>Find your BMI and health risks.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="metric" className="w-full">
+          <Tabs
+            defaultValue="metric"
+            className="w-full"
+            onValueChange={handleSystemChange}
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="metric">Metric</TabsTrigger>
-              <TabsTrigger value="imperial" disabled>
-                Imperial (Soon)
-              </TabsTrigger>
+              <TabsTrigger value="imperial">Imperial</TabsTrigger>
             </TabsList>
             <TabsContent value="metric">
               <div className="grid w-full items-center gap-4">
@@ -129,10 +191,11 @@ export function BmiCard() {
                     type="number"
                     min="1"
                     max="300"
-                    value={height}
+                    value={heightCm}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      setHeight(value === "" ? "" : Number(value));
+                      let value = Number(e.target.value);
+                      if (value > 300) value = 300; // Automatically adjust to 300 if higher
+                      setHeightCm(value === 0 ? "" : value);
                     }}
                     className="focus:ring-2 focus:ring-offset-2"
                   />
@@ -148,10 +211,11 @@ export function BmiCard() {
                     type="number"
                     min="1"
                     max="500"
-                    value={weight}
+                    value={weightKg}
                     onChange={(e) => {
-                      const value = e.target.value;
-                      setWeight(value === "" ? "" : Number(value));
+                      let value = Number(e.target.value);
+                      if (value > 650) value = 650; //
+                      setWeightKg(value === 0 ? "" : Number(value));
                     }}
                     className="focus:ring-2 focus:ring-offset-2"
                   />
@@ -169,15 +233,106 @@ export function BmiCard() {
                         {classification}
                       </Badge>
                     </div>
-                    {classification !== "Normal Weight" && typeof height === "number" && (
-                      <p className="text-sm text-muted-foreground">
-                        You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
-                        <span className="font-semibold">
-                          {kgDifference(bmi, height)}
-                        </span>{" "}
-                        kg to reach a normal weight.
+                    {classification !== "Normal Weight" &&
+                      typeof heightCm === "number" && (
+                        <p className="text-sm text-muted-foreground">
+                          You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
+                          <span className="font-semibold">
+                            {kgDifference(bmi, heightCm as number)}
+                          </span>{" "}
+                          kg to reach a normal weight.
+                        </p>
+                      )}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+            <TabsContent value="imperial">
+              <div className="grid w-full items-center gap-4">
+                <div className="flex flex-col space-y-1.5">
+                  <div className="flex w-full max-w-sm items-center space-x-2">
+                    <Label htmlFor="heightFeet">Height</Label>
+                  </div>
+                  <div className="flex space-x-4">
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="heightFeet"
+                        placeholder="Feet"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={heightFeet}
+                        onChange={(e) => {
+                          let value = Number(e.target.value);
+                          if (value > 10) value = 10; // Automatically adjust to 10 if higher
+                          setHeightFeet(value === 0 ? "" : value);
+                        }}
+                        className="focus:ring-2 focus:ring-offset-2"
+                      />
+                      <Badge variant="secondary">ft</Badge>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Input
+                        id="heightInches"
+                        placeholder="Inches"
+                        type="number"
+                        min="0"
+                        max="11"
+                        value={heightInches}
+                        onChange={(e) => {
+                          let value = Number(e.target.value);
+                          if (value > 11) value = 11; // Automatically adjust to 11 if higher
+                          setHeightInches(value === 0 ? "" : value);
+                        }}
+                        className="focus:ring-2 focus:ring-offset-2"
+                      />
+                      <Badge variant="secondary">in</Badge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col space-y-1.5">
+                  <div className="flex w-full max-w-sm items-center space-x-2">
+                    <Label htmlFor="weight">Weight</Label>
+                    <Badge variant="secondary">lbs</Badge>
+                  </div>
+                  <Input
+                    id="weight"
+                    placeholder="Enter weight in lbs"
+                    type="number"
+                    min="1"
+                    max="1000"
+                    value={weightLbs}
+                    onChange={(e) => {
+                      let value = Number(e.target.value);
+                      if (value > 1400) value = 1400;
+                      setWeightLbs(value === 0 ? "" : Number(value));
+                    }}
+                    className="focus:ring-2 focus:ring-offset-2"
+                  />
+                </div>
+                {bmi !== 0 && (
+                  <div className="flex flex-col space-y-3 p-4 bg-secondary rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <p className="text-m font-medium">
+                        Your BMI:{" "}
+                        <span className="font-bold text-lg">{bmi}</span>
                       </p>
-                    )}
+                      <Badge
+                        className={`${getColorByBmi(bmi)} transition-colors`}
+                      >
+                        {classification}
+                      </Badge>
+                    </div>
+                    {classification !== "Normal Weight" &&
+                      typeof heightFeet === "number" && (
+                        <p className="text-sm text-muted-foreground">
+                          You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
+                          <span className="font-semibold">
+                            {kgDifference(bmi, heightFeet as number)}
+                          </span>{" "}
+                          lbs to reach a normal weight.
+                        </p>
+                      )}
                   </div>
                 )}
               </div>
@@ -187,7 +342,10 @@ export function BmiCard() {
         <CardFooter className="flex justify-between">
           <Button
             onClick={handleClick}
-            disabled={height === "" || weight === ""}
+            disabled={
+              (system === "metric" ? heightCm : heightFeet) === "" ||
+              (system === "metric" ? weightKg : weightLbs) === ""
+            }
           >
             Calculate
           </Button>
@@ -196,8 +354,11 @@ export function BmiCard() {
               variant="secondary"
               onClick={() => {
                 setBmi(0);
-                setWeight("");
-                setHeight("");
+                setWeightKg("");
+                setWeightLbs("");
+                setHeightCm("");
+                setHeightFeet("");
+                setHeightInches("");
               }}
             >
               Clear
