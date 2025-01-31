@@ -172,8 +172,8 @@ export function BmiCard() {
           <Tabs
             defaultValue="metric"
             className="w-full"
-            onValueChange={handleSystemChange}
-          >
+            onValueChange={(value) => handleSystemChange(value as "metric" | "imperial")}
+            >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="metric">Metric</TabsTrigger>
               <TabsTrigger value="imperial">Imperial</TabsTrigger>
