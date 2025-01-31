@@ -32,7 +32,7 @@ export default function Home() {
       </main>
       <footer className="bg-black py-4 px-8">
         <p className="text-white text-center">
-          © 2024 BMI Calculator. All rights reserved.
+          © 2025 BMI Calculator. All rights reserved.
         </p>
       </footer>
     </div>
