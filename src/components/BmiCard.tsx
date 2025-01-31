@@ -16,35 +16,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
-import { Progress } from "@/components/ui/progress";
 
 export function BmiCard() {
   const { toast } = useToast();
-  const [height, setHeight] = useState(0);
-  const [weight, setWeight] = useState(0.0);
-  const [bmi, setBmi] = useState(0.0);
+  const [height, setHeight] = useState<number | "">("");
+  const [weight, setWeight] = useState<number | "">("");
+  const [bmi, setBmi] = useState(0);
 
   function handleClick(): void {
-    const bmi = Number(((weight / (height * height)) * 10_000).toFixed(2));
-    if (height === 0 || weight === 0.0 || isNaN(bmi)) {
+    if (height === "" || weight === "" || height <= 0 || weight <= 0) {
       toast({
-        title: "Uh oh! Invalid Input",
+        title: "Invalid Input",
         description: "Please enter valid values for height and weight.",
+        variant: "destructive",
+      });
+      setBmi(0);
+      return;
+    }
+
+    const calculatedBmi = Number(
+      ((weight / (height * height)) * 10_000).toFixed(1)
+    );
+
+    if (isNaN(calculatedBmi)) {
+      toast({
+        title: "Calculation Error",
+        description: "Unable to calculate BMI. Please check your inputs.",
+        variant: "destructive",
       });
       setBmi(0);
     } else {
-      setBmi(bmi);
+      setBmi(calculatedBmi);
     }
   }
 
-  function getBmiPercentage(): number {
-    const percentage = (bmi * 100) / 40;
-    return percentage >= 100 ? 100 : percentage;
-  }
-
   const kgDifference = (bmi: number, height: number): string => {
-    const idealWeight = (24.9 * (height * height)) / 10_000;
-    return Number(idealWeight - bmi).toFixed(2);
+    const currentWeight = (bmi * (height * height)) / 10_000;
+    let targetBmi;
+
+    if (bmi < 18.5) {
+      targetBmi = 18.5; // Target the lower end of normal weight
+    } else if (bmi > 24.9) {
+      targetBmi = 24.9; // Target the upper end of normal weight
+    } else {
+      return ""; // Return empty string for normal weight
+    }
+
+    const targetWeight = (targetBmi * (height * height)) / 10_000;
+    const difference = Math.abs(currentWeight - targetWeight);
+    return difference.toFixed(1);
   };
 
   const getBmiClassification = (bmi: number): string => {
@@ -83,16 +103,18 @@ export function BmiCard() {
 
   return (
     <>
-      <Card className="w-[350px] min-w-[350px]">
+      <Card className="w-[350px] min-w-[350px] shadow-lg">
         <CardHeader>
           <CardTitle>BMI Calculator</CardTitle>
           <CardDescription>Find your BMI and health risks.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultValue="metric">
+          <Tabs defaultValue="metric" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="metric">Metric</TabsTrigger>
-              <TabsTrigger value="imperial">Imperial</TabsTrigger>
+              <TabsTrigger value="imperial" disabled>
+                Imperial (Soon)
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="metric">
               <div className="grid w-full items-center gap-4">
@@ -105,8 +127,14 @@ export function BmiCard() {
                     id="height"
                     placeholder="Enter height in cm"
                     type="number"
-                    min="0"
-                    onChange={(e) => setHeight(Number(e.target.value))}
+                    min="1"
+                    max="300"
+                    value={height}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setHeight(value === "" ? "" : Number(value));
+                    }}
+                    className="focus:ring-2 focus:ring-offset-2"
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
@@ -118,48 +146,59 @@ export function BmiCard() {
                     id="weight"
                     placeholder="Enter weight in kg"
                     type="number"
-                    min="0"
-                    onChange={(e) => setWeight(Number(e.target.value))}
+                    min="1"
+                    max="500"
+                    value={weight}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setWeight(value === "" ? "" : Number(value));
+                    }}
+                    className="focus:ring-2 focus:ring-offset-2"
                   />
                 </div>
                 {bmi !== 0 && (
-                  <div className="flex flex-col space-y-1.5">
-                    <div className="flex justify-between">
-                      <p className="text-m font-medium leading-none">
-                        Your BMI is <span className="font-bold">{bmi}</span>.
+                  <div className="flex flex-col space-y-3 p-4 bg-secondary rounded-lg">
+                    <div className="flex justify-between items-center">
+                      <p className="text-m font-medium">
+                        Your BMI:{" "}
+                        <span className="font-bold text-lg">{bmi}</span>
                       </p>
-                      <Badge className={getColorByBmi(bmi)}>
+                      <Badge
+                        className={`${getColorByBmi(bmi)} transition-colors`}
+                      >
                         {classification}
                       </Badge>
                     </div>
-                    <p className="text-sm text-gray-500">
-                      You are {kgDifference(bmi, height)} kg away from the ideal
-                      weight.
-                    </p>
-                    <Progress value={getBmiPercentage()} />
+                    {classification !== "Normal Weight" && typeof height === "number" && (
+                      <p className="text-sm text-muted-foreground">
+                        You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
+                        <span className="font-semibold">
+                          {kgDifference(bmi, height)}
+                        </span>{" "}
+                        kg to reach a normal weight.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>
             </TabsContent>
-            <TabsContent value="imperial">
-              <p className="text-sm">Coming soon...</p>
-            </TabsContent>
           </Tabs>
         </CardContent>
         <CardFooter className="flex justify-between">
-          <Button onClick={handleClick}>Calculate</Button>
+          <Button
+            onClick={handleClick}
+            disabled={height === "" || weight === ""}
+          >
+            Calculate
+          </Button>
           {bmi !== 0 && (
             <Button
               variant="secondary"
               onClick={() => {
                 setBmi(0);
-                setWeight(0);
-                (document.getElementById("weight") as HTMLInputElement).value =
-                  "";
-                setHeight(0);
-                (document.getElementById("height") as HTMLInputElement).value =
-                  "";
-                }}
+                setWeight("");
+                setHeight("");
+              }}
             >
               Clear
             </Button>
