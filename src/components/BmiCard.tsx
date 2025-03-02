@@ -163,7 +163,7 @@ export function BmiCard() {
 
   return (
     <>
-      <Card className="w-full shadow-lg">
+      <Card className="w-full md:w-[400px] shadow-lg">
         <CardHeader>
           <CardTitle>BMI Calculator</CardTitle>
           <CardDescription>Find your BMI and health risks.</CardDescription>
@@ -255,7 +255,7 @@ export function BmiCard() {
                   <div className="flex w-full items-center space-x-2">
                     <Label htmlFor="heightFeet" className="text-base">Height</Label>
                   </div>
-                  <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
+                  <div className="grid grid-cols-2 gap-3">
                     <div className="flex items-center space-x-2">
                       <Input
                         id="heightFeet"

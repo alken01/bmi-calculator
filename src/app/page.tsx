@@ -27,7 +27,7 @@ export default function Home() {
               BMI = weight (kg) / height (m)²
             </pre>
           </div>
-          <div className="w-full md:w-auto order-1 md:order-2">
+          <div className="w-full order-1 md:order-2 flex justify-center md:justify-start">
             <BmiCard />
           </div>
         </div>
