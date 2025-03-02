@@ -163,7 +163,7 @@ export function BmiCard() {
 
   return (
     <>
-      <Card className="w-[350px] min-w-[350px] shadow-lg">
+      <Card className="w-full shadow-lg">
         <CardHeader>
           <CardTitle>BMI Calculator</CardTitle>
           <CardDescription>Find your BMI and health risks.</CardDescription>
@@ -173,62 +173,64 @@ export function BmiCard() {
             defaultValue="metric"
             className="w-full"
             onValueChange={(value) => handleSystemChange(value as "metric" | "imperial")}
-            >
-            <TabsList className="grid w-full grid-cols-2">
+          >
+            <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="metric">Metric</TabsTrigger>
               <TabsTrigger value="imperial">Imperial</TabsTrigger>
             </TabsList>
             <TabsContent value="metric">
               <div className="grid w-full items-center gap-4">
                 <div className="flex flex-col space-y-1.5">
-                  <div className="flex w-full max-w-sm items-center space-x-2">
-                    <Label htmlFor="height">Height</Label>
+                  <div className="flex w-full items-center space-x-2">
+                    <Label htmlFor="height" className="text-base">Height</Label>
                     <Badge variant="secondary">cm</Badge>
                   </div>
                   <Input
                     id="height"
                     placeholder="Enter height in cm"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     max="300"
                     value={heightCm}
                     onChange={(e) => {
                       let value = Number(e.target.value);
-                      if (value > 300) value = 300; // Automatically adjust to 300 if higher
+                      if (value > 300) value = 300;
                       setHeightCm(value === 0 ? "" : value);
                     }}
-                    className="focus:ring-2 focus:ring-offset-2"
+                    className="focus:ring-2 focus:ring-offset-2 text-base py-6"
                   />
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <div className="flex w-full max-w-sm items-center space-x-2">
-                    <Label htmlFor="weight">Weight</Label>
+                  <div className="flex w-full items-center space-x-2">
+                    <Label htmlFor="weight" className="text-base">Weight</Label>
                     <Badge variant="secondary">kg</Badge>
                   </div>
                   <Input
                     id="weight"
                     placeholder="Enter weight in kg"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     max="500"
                     value={weightKg}
                     onChange={(e) => {
                       let value = Number(e.target.value);
-                      if (value > 650) value = 650; //
+                      if (value > 650) value = 650;
                       setWeightKg(value === 0 ? "" : Number(value));
                     }}
-                    className="focus:ring-2 focus:ring-offset-2"
+                    className="focus:ring-2 focus:ring-offset-2 text-base py-6"
                   />
                 </div>
                 {bmi !== 0 && (
                   <div className="flex flex-col space-y-3 p-4 bg-secondary rounded-lg">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <p className="text-m font-medium">
                         Your BMI:{" "}
                         <span className="font-bold text-lg">{bmi}</span>
                       </p>
                       <Badge
-                        className={`${getColorByBmi(bmi)} transition-colors`}
+                        className={`${getColorByBmi(bmi)} transition-colors text-sm py-1.5`}
                       >
                         {classification}
                       </Badge>
@@ -250,24 +252,25 @@ export function BmiCard() {
             <TabsContent value="imperial">
               <div className="grid w-full items-center gap-4">
                 <div className="flex flex-col space-y-1.5">
-                  <div className="flex w-full max-w-sm items-center space-x-2">
-                    <Label htmlFor="heightFeet">Height</Label>
+                  <div className="flex w-full items-center space-x-2">
+                    <Label htmlFor="heightFeet" className="text-base">Height</Label>
                   </div>
-                  <div className="flex space-x-4">
+                  <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-2 sm:space-y-0">
                     <div className="flex items-center space-x-2">
                       <Input
                         id="heightFeet"
                         placeholder="Feet"
                         type="number"
+                        inputMode="numeric"
                         min="1"
                         max="10"
                         value={heightFeet}
                         onChange={(e) => {
                           let value = Number(e.target.value);
-                          if (value > 10) value = 10; // Automatically adjust to 10 if higher
+                          if (value > 10) value = 10;
                           setHeightFeet(value === 0 ? "" : value);
                         }}
-                        className="focus:ring-2 focus:ring-offset-2"
+                        className="focus:ring-2 focus:ring-offset-2 text-base py-6"
                       />
                       <Badge variant="secondary">ft</Badge>
                     </div>
@@ -276,29 +279,31 @@ export function BmiCard() {
                         id="heightInches"
                         placeholder="Inches"
                         type="number"
+                        inputMode="numeric"
                         min="0"
                         max="11"
                         value={heightInches}
                         onChange={(e) => {
                           let value = Number(e.target.value);
-                          if (value > 11) value = 11; // Automatically adjust to 11 if higher
+                          if (value > 11) value = 11;
                           setHeightInches(value === 0 ? "" : value);
                         }}
-                        className="focus:ring-2 focus:ring-offset-2"
+                        className="focus:ring-2 focus:ring-offset-2 text-base py-6"
                       />
                       <Badge variant="secondary">in</Badge>
                     </div>
                   </div>
                 </div>
                 <div className="flex flex-col space-y-1.5">
-                  <div className="flex w-full max-w-sm items-center space-x-2">
-                    <Label htmlFor="weight">Weight</Label>
+                  <div className="flex w-full items-center space-x-2">
+                    <Label htmlFor="weight" className="text-base">Weight</Label>
                     <Badge variant="secondary">lbs</Badge>
                   </div>
                   <Input
                     id="weight"
                     placeholder="Enter weight in lbs"
                     type="number"
+                    inputMode="numeric"
                     min="1"
                     max="1000"
                     value={weightLbs}
@@ -307,18 +312,18 @@ export function BmiCard() {
                       if (value > 1400) value = 1400;
                       setWeightLbs(value === 0 ? "" : Number(value));
                     }}
-                    className="focus:ring-2 focus:ring-offset-2"
+                    className="focus:ring-2 focus:ring-offset-2 text-base py-6"
                   />
                 </div>
                 {bmi !== 0 && (
                   <div className="flex flex-col space-y-3 p-4 bg-secondary rounded-lg">
-                    <div className="flex justify-between items-center">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                       <p className="text-m font-medium">
                         Your BMI:{" "}
                         <span className="font-bold text-lg">{bmi}</span>
                       </p>
                       <Badge
-                        className={`${getColorByBmi(bmi)} transition-colors`}
+                        className={`${getColorByBmi(bmi)} transition-colors text-sm py-1.5`}
                       >
                         {classification}
                       </Badge>
@@ -328,7 +333,10 @@ export function BmiCard() {
                         <p className="text-sm text-muted-foreground">
                           You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
                           <span className="font-semibold">
-                            {kgDifference(bmi, heightFeet as number)}
+                            {kgDifference(
+                              bmi,
+                              (heightFeet as number) * 12 + (heightInches as number)
+                            )}
                           </span>{" "}
                           lbs to reach a normal weight.
                         </p>
@@ -339,13 +347,14 @@ export function BmiCard() {
             </TabsContent>
           </Tabs>
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:justify-between w-full">
           <Button
             onClick={handleClick}
             disabled={
               (system === "metric" ? heightCm : heightFeet) === "" ||
               (system === "metric" ? weightKg : weightLbs) === ""
             }
+            className="w-full sm:w-auto py-6 text-base"
           >
             Calculate
           </Button>
@@ -360,6 +369,7 @@ export function BmiCard() {
                 setHeightFeet("");
                 setHeightInches("");
               }}
+              className="w-full sm:w-auto py-6 text-base"
             >
               Clear
             </Button>
