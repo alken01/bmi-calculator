@@ -34,7 +34,7 @@ export default function Home() {
       </main>
       <footer className="bg-black py-4 px-4 sm:px-8 mt-8">
         <p className="text-white text-center text-sm sm:text-base">
-          © 2025 BMI Calculator. All rights reserved.
+          github/alken01
         </p>
       </footer>
     </div>

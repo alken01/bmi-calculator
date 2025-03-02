@@ -79,32 +79,101 @@ export function BmiCard() {
     }
   }
 
-  const kgDifference = (bmi: number, height: number): string => {
-    const currentWeight =
-      system === "metric"
-        ? (bmi * (height * height)) / 10_000
-        : (bmi * (height * height)) / 703;
-    let targetBmi;
+  const calculateWeightForBmi = (targetBmi: number, height: number): number => {
+    return system === "metric"
+      ? (targetBmi * (height * height)) / 10_000
+      : (targetBmi * (height * height)) / 703;
+  };
 
-    if (bmi < 18.5) {
-      targetBmi = 18.5;
-    } else if (bmi > 24.9) {
-      targetBmi = 24.9;
-    } else {
-      return "";
-    }
-
-    const targetWeight =
-      system === "metric"
-        ? (targetBmi * (height * height)) / 10_000
-        : (targetBmi * (height * height)) / 703;
+  const weightDifferenceToTarget = (currentBmi: number, targetBmi: number, height: number): string => {
+    const currentWeight = calculateWeightForBmi(currentBmi, height);
+    const targetWeight = calculateWeightForBmi(targetBmi, height);
     const difference = Math.abs(currentWeight - targetWeight);
     return difference.toFixed(1);
   };
 
-  const getBmiClassification = (bmi: number): string => {
+  const getBmiMilestones = (bmi: number, height: number): Array<{category: string, targetBmi: number, difference: string}> => {
+    const milestones = [];
+    
+    // Define BMI thresholds and their categories
+    const underweightThresholds = [
+      { bmi: 17, category: "Mildly Underweight" },
+      { bmi: 16, category: "Moderately Underweight" }
+    ];
+    
+    const overweightThresholds = [
+      { bmi: 24.9, category: "Normal Weight" },
+      { bmi: 29.9, category: "Overweight" },
+      { bmi: 34.9, category: "Obesity Class I" },
+      { bmi: 39.9, category: "Obesity Class II" }
+    ];
+    
     if (bmi < 18.5) {
-      return "Underweight";
+      // For underweight - provide milestones to gain weight
+      if (bmi < 16) {
+        // Severely underweight - show steps to each higher category
+        milestones.push({
+          category: "Moderately Underweight",
+          targetBmi: 16,
+          difference: weightDifferenceToTarget(bmi, 16, height)
+        });
+        milestones.push({
+          category: "Mildly Underweight",
+          targetBmi: 17,
+          difference: weightDifferenceToTarget(bmi, 17, height)
+        });
+        milestones.push({
+          category: "Normal Weight",
+          targetBmi: 18.5,
+          difference: weightDifferenceToTarget(bmi, 18.5, height)
+        });
+      } else if (bmi < 17) {
+        // Moderately underweight
+        milestones.push({
+          category: "Mildly Underweight",
+          targetBmi: 17,
+          difference: weightDifferenceToTarget(bmi, 17, height)
+        });
+        milestones.push({
+          category: "Normal Weight",
+          targetBmi: 18.5,
+          difference: weightDifferenceToTarget(bmi, 18.5, height)
+        });
+      } else {
+        // Mildly underweight
+        milestones.push({
+          category: "Normal Weight",
+          targetBmi: 18.5,
+          difference: weightDifferenceToTarget(bmi, 18.5, height)
+        });
+      }
+    } else if (bmi > 24.9) {
+      // For overweight and obese - provide milestones to lose weight
+      for (let i = 0; i < overweightThresholds.length; i++) {
+        if (bmi > overweightThresholds[i].bmi) {
+          // Add milestones for categories below current BMI
+          milestones.push({
+            category: overweightThresholds[i].category,
+            targetBmi: overweightThresholds[i].bmi,
+            difference: weightDifferenceToTarget(bmi, overweightThresholds[i].bmi, height)
+          });
+        }
+      }
+      
+      // Sort milestones by closest goal first
+      return milestones.reverse();
+    }
+    
+    return milestones;
+  };
+
+  const getBmiClassification = (bmi: number): string => {
+    if (bmi < 16) {
+      return "Severely Underweight";
+    } else if (bmi >= 16 && bmi < 17) {
+      return "Moderately Underweight";
+    } else if (bmi >= 17 && bmi < 18.5) {
+      return "Mildly Underweight";
     } else if (bmi >= 18.5 && bmi <= 24.9) {
       return "Normal Weight";
     } else if (bmi >= 25 && bmi <= 29.9) {
@@ -119,7 +188,11 @@ export function BmiCard() {
   };
 
   const getColorByBmi = (bmi: number): string => {
-    if (bmi < 18.5) {
+    if (bmi < 16) {
+      return "bg-indigo-700";
+    } else if (bmi >= 16 && bmi < 17) {
+      return "bg-indigo-500";
+    } else if (bmi >= 17 && bmi < 18.5) {
       return "bg-blue-500";
     } else if (bmi >= 18.5 && bmi <= 24.9) {
       return "bg-green-500";
@@ -130,7 +203,7 @@ export function BmiCard() {
     } else if (bmi >= 35 && bmi <= 39.9) {
       return "bg-red-500";
     } else {
-      return "bg-red-500";
+      return "bg-red-700";
     }
   };
 
@@ -166,7 +239,7 @@ export function BmiCard() {
       <Card className="w-full md:w-[400px] shadow-lg">
         <CardHeader>
           <CardTitle>BMI Calculator</CardTitle>
-          <CardDescription>Find your BMI and health risks.</CardDescription>
+          <CardDescription>Find your BMI.</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs
@@ -235,15 +308,28 @@ export function BmiCard() {
                         {classification}
                       </Badge>
                     </div>
+                    
                     {classification !== "Normal Weight" &&
                       typeof heightCm === "number" && (
-                        <p className="text-sm text-muted-foreground">
-                          You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
-                          <span className="font-semibold">
-                            {kgDifference(bmi, heightCm as number)}
-                          </span>{" "}
-                          kg to reach a normal weight.
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Weight goals:</p>
+                          {getBmiMilestones(bmi, heightCm as number).map((milestone, index) => (
+                            <div key={index} className="flex justify-between items-center">
+                              <p className="text-sm text-muted-foreground">
+                                {bmi < 18.5 ? "Gain" : "Lose"}{" "}
+                                <span className="font-semibold">
+                                  {milestone.difference}
+                                </span>{" "}
+                                kg to reach:
+                              </p>
+                              <Badge
+                                className={`${getColorByBmi(milestone.targetBmi)} text-xs py-1`}
+                              >
+                                {milestone.category}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
                       )}
                   </div>
                 )}
@@ -328,18 +414,28 @@ export function BmiCard() {
                         {classification}
                       </Badge>
                     </div>
+                    
                     {classification !== "Normal Weight" &&
                       typeof heightFeet === "number" && (
-                        <p className="text-sm text-muted-foreground">
-                          You need to {bmi < 18.5 ? "gain" : "lose"}{" "}
-                          <span className="font-semibold">
-                            {kgDifference(
-                              bmi,
-                              (heightFeet as number) * 12 + (heightInches as number)
-                            )}
-                          </span>{" "}
-                          lbs to reach a normal weight.
-                        </p>
+                        <div className="space-y-2">
+                          <p className="text-sm font-medium">Weight goals:</p>
+                          {getBmiMilestones(bmi, (heightFeet as number) * 12 + (heightInches as number)).map((milestone, index) => (
+                            <div key={index} className="flex justify-between items-center">
+                              <p className="text-sm text-muted-foreground">
+                                {bmi < 18.5 ? "Gain" : "Lose"}{" "}
+                                <span className="font-semibold">
+                                  {milestone.difference}
+                                </span>{" "}
+                                lbs to reach:
+                              </p>
+                              <Badge
+                                className={`${getColorByBmi(milestone.targetBmi)} text-xs py-1`}
+                              >
+                                {milestone.category}
+                              </Badge>
+                            </div>
+                          ))}
+                        </div>
                       )}
                   </div>
                 )}
