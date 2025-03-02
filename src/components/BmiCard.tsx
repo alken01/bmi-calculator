@@ -297,7 +297,7 @@ export function BmiCard() {
                 </div>
                 {bmi !== 0 && (
                   <div className="flex flex-col space-y-3 p-4 bg-secondary rounded-lg">
-                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                    <div className="flex justify-between items-center">
                       <p className="text-m font-medium">
                         Your BMI:{" "}
                         <span className="font-bold text-lg">{bmi}</span>
