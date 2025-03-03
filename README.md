@@ -4,7 +4,7 @@ A modern web application built with Next.js and TypeScript to calculate Body Mas
 
 ## Live Demo
 
-Try it out: [BMI Calculator](https://bmi-calculator-5m11.vercel.app/)
+Try it out: [BMI Calculator](https://bmi-calculator-xi-blue.vercel.app/)
 
 ## Screenshots
 
