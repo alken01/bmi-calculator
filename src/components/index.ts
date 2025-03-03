@@ -1,0 +1,1 @@
+export { BmiCard } from './BmiCard';
